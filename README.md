@@ -1,6 +1,6 @@
 # Telegram Bouncer Bot
 
-[![ci](https://github.com/DASPRiD/telegram-bouncer-bot/actions/workflows/ci.yml/badge.svg)](https://github.com/DASPRiD/telegram-bouncer-bot/actions/workflows/ci.yml)
+[![ci](https://github.com/DASPRiD/telegram-bouncer-bot/actions/workflows/cicd.yml/badge.svg)](https://github.com/DASPRiD/telegram-bouncer-bot/actions/workflows/cicd.yml)
 
 A simple bot to act as a bouncer for your Telegram group. It works the following way:
 
