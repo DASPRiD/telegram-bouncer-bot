@@ -1,5 +1,4 @@
 VERSION="$1"
 
-cargo install cargo-edit
-cargo set-version "$VERSION"
+sed -i '/\[package\]/,/^version = "[^"]*"$/ s/^version = "[^"]*"$/version = "'"$VERSION"'"/' Cargo.toml
 cargo update -w --offline
