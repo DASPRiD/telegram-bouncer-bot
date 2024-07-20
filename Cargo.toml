@@ -1,0 +1,27 @@
+[package]
+name = "telegram-bouncer-bot"
+description = "Telegram Bouncer Bot"
+version = "0.1.0"
+authors = ["Ben Scholzen (DASPRiD) <mail@dasprids.de>"]
+readme = "README.md"
+license-file = "LICENSE"
+edition = "2021"
+
+[dependencies]
+base64 = "0.22.1"
+chrono = "0.4.38"
+envconfig = "0.10.0"
+futures = "0.3.30"
+i18n-embed = { version = "0.14.1", features = ["fluent-system"] }
+i18n-embed-fl = "0.8.0"
+log = "0.4.22"
+once_cell = "1.19.0"
+pretty_env_logger = "0.5.0"
+rust-embed = "8.5.0"
+teloxide = { git = "https://github.com/teloxide/teloxide.git", branch = "master", default-features = false, features = ["rustls", "ctrlc_handler", "sqlite-storage-rustls", "macros"] }
+thiserror = "1.0.62"
+tokio = { version = "1.38.0", features = ["rt-multi-thread", "macros"] }
+serde = { version = "1.0.204", features = ["derive"] }
+
+[profile.release]
+strip = true

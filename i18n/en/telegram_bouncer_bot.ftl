@@ -1,0 +1,9 @@
+privacy-policy = We store your user ID and display name for the duration of the review, after which they will be deleted. No other data are collected.
+invalid-state = Unable to handle the message. Type /help to see the usage.
+reason-prompt = Please tell me in a few words why you want to join this chat.
+reason-missing = Please send me your reason to join.
+reason-received = Thank you, our moderators will review your join request.
+cancelling-join-request = Cancelling the join request.
+request-approved = Your request has been approved. You can join the the chat now by following this link: {$link}
+request-denied = Your request has been denied. If you think this was an error, you can /start again.
+under-review = Your request is still under review.
