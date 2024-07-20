@@ -60,6 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
       - uses: cycjimmy/semantic-release-action@v4
         id: semantic
         env:
