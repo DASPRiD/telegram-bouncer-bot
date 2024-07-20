@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 concurrency:
   group: '${{ github.workflow }}'
@@ -73,7 +74,10 @@ jobs:
             @semantic-release/git
     outputs:
       did-release: ${{ steps.semantic.outputs.new_release_published }}
+      new-major-version: ${{ steps.semantic.outputs.new_release_major_version }}
+      new-minor-version: ${{ steps.semantic.outputs.new_release_minor_version }}
       new-version: ${{ steps.semantic.outputs.new_release_version }}
+      new-tag: ${{ steps.semantic.outputs.new_release_git_tag }}
 
   build:
     name: Build Docker image
@@ -83,7 +87,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ needs.release.outputs.new_version }}
+          ref: ${{ needs.release.outputs.new_tag }}
       - uses: docker/setup-buildx-action@v3
 
       - uses: docker/login-action@v3
@@ -104,6 +108,8 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=${{ needs.release.outputs.new-version }}
+            type=raw,value=${{ needs.release.outputs.new-major-version }}
+            type=raw,value=${{ needs.release.outputs.new-major-version }}.${{ needs.release.outputs.new-minor-version }}
             type=raw,value=latest
 
       - uses: docker/build-push-action@v5
