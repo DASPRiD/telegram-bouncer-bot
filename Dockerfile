@@ -11,12 +11,12 @@ WORKDIR /usr/src
 RUN USER=root cargo new telegram-bouncer-bot
 WORKDIR /usr/src/telegram-bouncer-bot
 COPY Cargo.toml Cargo.lock ./
-RUN cargo install --target x86_64-unknown-linux-musl --bin telegram-bouncer-bot --path .
+RUN cargo build --target x86_64-unknown-linux-musl --release
 
 COPY src ./src
-RUN cargo install --target x86_64-unknown-linux-musl --bin telegram-bouncer-bot --path .
+RUN cargo build --target x86_64-unknown-linux-musl --release
 
 FROM scratch
-COPY --from=builder /usr/local/cargo/bin/telegram-bouncer-bot .
+COPY --from=builder /usr/src/telegram-bouncer-bot/target/x86_64-unknown-linux-musl/telegram-bouncer-bot .
 USER 1000
 CMD ["./telegram-bouncer-bot"]

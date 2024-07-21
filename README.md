@@ -18,6 +18,7 @@ pre-built containers for this purpose. A simple setup with a `docker-compose.yml
 services:
   bot:
     image: ghcr.io/dasprid/telegram-bouncer-bot:latest
+    restart: unless-stopped
     volumes:
       - 'bot-data:/data'
     environment:
