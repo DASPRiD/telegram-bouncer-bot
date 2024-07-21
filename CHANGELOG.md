@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.0.1...v1.0.2) (2024-07-21)
+
+
+### Bug Fixes
+
+* **Dockerfile:** touch main.rs to bust build cache and add missing source files ([52a421e](https://github.com/DASPRiD/telegram-bouncer-bot/commit/52a421e7206a28f6429a602ca1d68bc47321f8df))
+
 ## [1.0.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.0.0...v1.0.1) (2024-07-21)
 
 
