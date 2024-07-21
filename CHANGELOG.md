@@ -1,3 +1,10 @@
+## [1.1.2](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.1.1...v1.1.2) (2024-07-21)
+
+
+### Bug Fixes
+
+* escape parantheses in display name ([cf2e9d6](https://github.com/DASPRiD/telegram-bouncer-bot/commit/cf2e9d68b959d36a6870c78e2375c9b3310cb3e6))
+
 ## [1.1.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.1.0...v1.1.1) (2024-07-21)
 
 
