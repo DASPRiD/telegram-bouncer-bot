@@ -301,7 +301,7 @@ async fn update_review_message(
         reviewer.id
     ));
 
-    bot.edit_message_text(chat_id, message.id, new_text)
+    bot.edit_message_text(chat_id, message.id, escape(&new_text))
         .parse_mode(ParseMode::MarkdownV2)
         .reply_markup(InlineKeyboardMarkup::default())
         .await?;
