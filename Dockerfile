@@ -14,6 +14,9 @@ COPY Cargo.toml Cargo.lock ./
 RUN cargo build --target x86_64-unknown-linux-musl --release
 
 COPY src ./src
+COPY i18n ./i18n
+COPY ./i18n.toml ./
+RUN touch src/main.rs
 RUN cargo build --target x86_64-unknown-linux-musl --release
 
 FROM scratch
