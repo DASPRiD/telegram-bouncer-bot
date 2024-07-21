@@ -212,15 +212,17 @@ async fn await_approval(bot: Bot, msg: Message) -> HandlerResult {
 }
 
 fn get_display_name(user: &User) -> String {
-    let mut display_name = user.first_name.clone();
+    let mut full_name = user.first_name.clone();
 
     if let Some(last_name) = user.last_name.clone() {
-        display_name.push(' ');
-        display_name.push_str(&last_name);
+        full_name.push(' ');
+        full_name.push_str(&last_name);
     }
 
+    let mut display_name = format!("[{}](tg://user?id={})", escape(&full_name), user.id);
+
     if let Some(username) = user.username.clone() {
-        display_name.push_str(&format!(" (@{})", username));
+        display_name.push_str(&format!(" (@{})", escape(&username)));
     }
 
     display_name
@@ -259,14 +261,12 @@ async fn receive_reason(
     ]];
     let keyboard_markup = InlineKeyboardMarkup::new(keyboard);
 
-    let display_name = get_display_name(user);
     let moderator_message = bot
         .send_message(
             ChatId(config.moderator_chat_id),
             format!(
-                "[{}](tg://user?id={}) would like to join for the following reason:\n\n{}",
-                escape(&display_name),
-                user.id,
+                "{} would like to join for the following reason:\n\n{}",
+                get_display_name(user),
                 escape(reason.trim()),
             ),
         )
@@ -296,13 +296,11 @@ async fn update_review_message(
         None => return Ok(()),
     };
 
-    let display_name = get_display_name(reviewer);
     let mut new_text = previous_text.to_string();
     new_text.push_str(&format!(
-        "\n\n{} by [{}](tg://user?id={})",
+        "\n\n{} by {}",
         if approved { "Approved" } else { "Denied" },
-        display_name,
-        reviewer.id
+        get_display_name(reviewer),
     ));
 
     bot.edit_message_text(chat_id, message.id, escape(&new_text))
