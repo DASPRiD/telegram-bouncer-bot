@@ -222,7 +222,7 @@ fn get_display_name(user: &User) -> String {
     let mut display_name = format!("[{}](tg://user?id={})", escape(&full_name), user.id);
 
     if let Some(username) = user.username.clone() {
-        display_name.push_str(&format!(" (@{})", escape(&username)));
+        display_name.push_str(&escape(&format!(" (@{})", &username)));
     }
 
     display_name
