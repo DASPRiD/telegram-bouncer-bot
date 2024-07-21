@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.0.2...v1.0.3) (2024-07-21)
+
+
+### Bug Fixes
+
+* **Dockerfile:** add owned data directory to final image ([2719481](https://github.com/DASPRiD/telegram-bouncer-bot/commit/27194810c9dfd49064ac9f98fb88b2b567e641ea))
+
 ## [1.0.2](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.0.1...v1.0.2) (2024-07-21)
 
 
