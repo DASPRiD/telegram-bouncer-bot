@@ -1,3 +1,10 @@
+## [1.1.3](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.1.2...v1.1.3) (2024-07-21)
+
+
+### Bug Fixes
+
+* properly escape edited review message ([f6f3ce9](https://github.com/DASPRiD/telegram-bouncer-bot/commit/f6f3ce93de15b1891328981d647018a0baef761f))
+
 ## [1.1.2](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.1.1...v1.1.2) (2024-07-21)
 
 
