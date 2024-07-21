@@ -296,16 +296,15 @@ async fn update_review_message(
         None => return Ok(()),
     };
 
-    let mut new_text = previous_text.to_string();
+    let mut new_text = escape(previous_text);
     new_text.push_str(&format!(
         "\n\n{} by {}",
         if approved { "Approved" } else { "Denied" },
         get_display_name(reviewer),
     ));
 
-    bot.edit_message_text(chat_id, message.id, escape(&new_text))
+    bot.edit_message_text(chat_id, message.id, &new_text)
         .parse_mode(ParseMode::MarkdownV2)
-        .reply_markup(InlineKeyboardMarkup::default())
         .await?;
 
     Ok(())
