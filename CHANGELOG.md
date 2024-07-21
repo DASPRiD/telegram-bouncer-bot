@@ -1,3 +1,15 @@
+# [1.1.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.0.3...v1.1.0) (2024-07-21)
+
+
+### Bug Fixes
+
+* escape markdown in review edit message ([f241b72](https://github.com/DASPRiD/telegram-bouncer-bot/commit/f241b7224acfed9b687038ea110589c760d69f57))
+
+
+### Features
+
+* add username to display name if available ([13a3469](https://github.com/DASPRiD/telegram-bouncer-bot/commit/13a3469bf89627e1df0956ddad2ffb13e3b8470b))
+
 ## [1.0.3](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.0.2...v1.0.3) (2024-07-21)
 
 
