@@ -39,6 +39,14 @@ Before you can run the bot, you need to do following steps:
 The bot can also run without persistent storage. This will make the bot forget any conversations it had upon restart.
 If this isn't a problem for you, simply remove the volume and the `STORAGE_PATH` env variable.
 
+## Bot permissions
+
+After adding the bot to both your primary and your moderator chat, you need to give the bot the following administrator
+permissions:
+
+- Primary chat: Add users or invite users via invite link
+- Moderator chat: Delete messages
+
 ## Version locking
 
 In the example above we locked the bot to the latest  version. This isn't the best choice though, as it might later
