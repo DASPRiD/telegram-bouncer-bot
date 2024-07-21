@@ -1,3 +1,10 @@
+## [1.1.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.1.0...v1.1.1) (2024-07-21)
+
+
+### Bug Fixes
+
+* encode markdown display name in getter function ([442b461](https://github.com/DASPRiD/telegram-bouncer-bot/commit/442b461fbba20da1ff76c1c4db3ec453b33687ab))
+
 # [1.1.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.0.3...v1.1.0) (2024-07-21)
 
 
