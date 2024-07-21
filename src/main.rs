@@ -219,6 +219,10 @@ fn get_display_name(user: &User) -> String {
         display_name.push_str(&last_name);
     }
 
+    if let Some(username) = user.username.clone() {
+        display_name.push_str(&format!(" (@{})", username));
+    }
+
     display_name
 }
 
