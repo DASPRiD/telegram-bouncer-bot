@@ -17,6 +17,6 @@ COPY src ./src
 RUN cargo build --target x86_64-unknown-linux-musl --release
 
 FROM scratch
-COPY --from=builder /usr/src/telegram-bouncer-bot/target/x86_64-unknown-linux-musl/telegram-bouncer-bot .
+COPY --from=builder /usr/src/telegram-bouncer-bot/target/x86_64-unknown-linux-musl/release/telegram-bouncer-bot .
 USER 1000
 CMD ["./telegram-bouncer-bot"]
