@@ -211,7 +211,7 @@ async fn await_approval(bot: Bot, msg: Message) -> HandlerResult {
     Ok(())
 }
 
-fn get_display_name(user: &User) -> String {
+fn get_markdown_display_name(user: &User) -> String {
     let mut full_name = user.first_name.clone();
 
     if let Some(last_name) = user.last_name.clone() {
@@ -223,6 +223,21 @@ fn get_display_name(user: &User) -> String {
 
     if let Some(username) = user.username.clone() {
         display_name.push_str(&escape(&format!(" (@{})", &username)));
+    }
+
+    display_name
+}
+
+fn get_plaintext_display_name(user: &User) -> String {
+    let mut display_name = user.first_name.clone();
+
+    if let Some(last_name) = user.last_name.clone() {
+        display_name.push(' ');
+        display_name.push_str(&last_name);
+    }
+
+    if let Some(username) = user.username.clone() {
+        display_name.push_str(&format!(" (@{})", &username));
     }
 
     display_name
@@ -266,7 +281,7 @@ async fn receive_reason(
             ChatId(config.moderator_chat_id),
             format!(
                 "{} would like to join for the following reason:\n\n{}",
-                get_display_name(user),
+                get_markdown_display_name(user),
                 escape(reason.trim()),
             ),
         )
@@ -291,20 +306,24 @@ async fn update_review_message(
     approved: bool,
     reviewer: &User,
 ) -> HandlerResult {
-    let previous_text = match message.text() {
-        Some(text) => text,
+    let mut text = match message.text() {
+        Some(text) => text.to_string(),
         None => return Ok(()),
     };
 
-    let mut new_text = escape(previous_text);
-    new_text.push_str(&format!(
+    let entities = match message.entities() {
+        Some(entities) => entities.to_vec(),
+        None => return Ok(()),
+    };
+
+    text.push_str(&format!(
         "\n\n{} by {}",
         if approved { "Approved" } else { "Denied" },
-        get_display_name(reviewer),
+        get_plaintext_display_name(reviewer),
     ));
 
-    bot.edit_message_text(chat_id, message.id, &new_text)
-        .parse_mode(ParseMode::MarkdownV2)
+    bot.edit_message_text(chat_id, message.id, &text)
+        .entities(entities)
         .await?;
 
     Ok(())
