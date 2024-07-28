@@ -1,3 +1,10 @@
+# [1.2.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.1.3...v1.2.0) (2024-07-28)
+
+
+### Features
+
+* preserve original user link when editing review message ([1a54f0a](https://github.com/DASPRiD/telegram-bouncer-bot/commit/1a54f0a65a849bd3bf92945077f9dc3cfd0a57a3))
+
 ## [1.1.3](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.1.2...v1.1.3) (2024-07-21)
 
 

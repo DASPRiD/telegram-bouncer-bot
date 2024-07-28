@@ -1,7 +1,7 @@
 [package]
 name = "telegram-bouncer-bot"
 description = "Telegram Bouncer Bot"
-version = "1.1.3"
+version = "1.2.0"
 authors = ["Ben Scholzen (DASPRiD) <mail@dasprids.de>"]
 readme = "README.md"
 license-file = "LICENSE"
