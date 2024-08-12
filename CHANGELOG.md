@@ -1,3 +1,10 @@
+# [1.3.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.2.0...v1.3.0) (2024-08-12)
+
+
+### Features
+
+* add block feature ([b3ea4eb](https://github.com/DASPRiD/telegram-bouncer-bot/commit/b3ea4ebef36e3e96729a7ab150f3b43ae6cfaa86))
+
 # [1.2.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.1.3...v1.2.0) (2024-07-28)
 
 
