@@ -23,7 +23,7 @@ use teloxide::{
     utils::command::BotCommands,
 };
 
-use crate::review::Review;
+use crate::review::{Review, ReviewAction};
 
 mod review;
 
@@ -67,6 +67,7 @@ pub enum State {
     AwaitApproval {
         message_id: MessageId,
     },
+    Blocked,
 }
 
 #[derive(RustEmbed)]
@@ -119,15 +120,13 @@ fn schema() -> UpdateHandler<Box<dyn Error + Send + Sync + 'static>> {
     use dptree::case;
 
     let command_handler = teloxide::filter_command::<Command, _>()
-        .branch(
-            case![State::Start]
-                .branch(case![Command::Help].endpoint(help))
-                .branch(case![Command::Start].endpoint(start)),
-        )
+        .branch(case![Command::Start].endpoint(start))
+        .branch(case![Command::Help].endpoint(help))
         .branch(case![Command::Cancel].endpoint(cancel))
         .branch(case![Command::Privacy].endpoint(privacy));
 
     let message_handler = Update::filter_message()
+        .branch(case![State::Blocked].endpoint(blocked))
         .branch(command_handler)
         .branch(case![State::ReceiveReason].endpoint(receive_reason))
         .branch(case![State::AwaitApproval { message_id }].endpoint(await_approval));
@@ -151,6 +150,17 @@ fn locale_from_message(msg: &Message) -> LanguageIdentifier {
 fn loader_from_message(msg: &Message) -> FluentLanguageLoader {
     LANGUAGE_LOADER
         .select_languages_negotiate(&[locale_from_message(msg)], NegotiationStrategy::Filtering)
+}
+
+async fn blocked(bot: Bot, _dialogue: JoinDialogue, msg: Message) -> HandlerResult {
+    if !msg.chat.is_private() {
+        return Ok(());
+    }
+
+    let loader = loader_from_message(&msg);
+    bot.send_message(msg.chat.id, fl!(loader, "blocked"))
+        .await?;
+    Ok(())
 }
 
 async fn start(bot: Bot, dialogue: JoinDialogue, msg: Message) -> HandlerResult {
@@ -270,9 +280,16 @@ async fn receive_reason(
     let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![vec![
         InlineKeyboardButton::callback(
             "Approve",
-            Review::new(true, msg.chat.id, user.id, locale.clone()),
+            Review::new(ReviewAction::Approve, msg.chat.id, user.id, locale.clone()),
         ),
-        InlineKeyboardButton::callback("Deny", Review::new(false, msg.chat.id, user.id, locale)),
+        InlineKeyboardButton::callback(
+            "Deny",
+            Review::new(ReviewAction::Deny, msg.chat.id, user.id, locale.clone()),
+        ),
+        InlineKeyboardButton::callback(
+            "Block",
+            Review::new(ReviewAction::Block, msg.chat.id, user.id, locale),
+        ),
     ]];
     let keyboard_markup = InlineKeyboardMarkup::new(keyboard);
 
@@ -303,8 +320,9 @@ async fn update_review_message(
     bot: Bot,
     message: Message,
     chat_id: ChatId,
-    approved: bool,
+    action: ReviewAction,
     reviewer: &User,
+    keyboard_markup: Option<InlineKeyboardMarkup>,
 ) -> HandlerResult {
     let mut text = match message.text() {
         Some(text) => text.to_string(),
@@ -318,13 +336,24 @@ async fn update_review_message(
 
     text.push_str(&format!(
         "\n\n{} by {}",
-        if approved { "Approved" } else { "Denied" },
+        match action {
+            ReviewAction::Approve => "Approved",
+            ReviewAction::Deny => "Denied",
+            ReviewAction::Block => "Blocked",
+            ReviewAction::Unblock => "Unblocked",
+        },
         get_plaintext_display_name(reviewer),
     ));
 
-    bot.edit_message_text(chat_id, message.id, &text)
-        .entities(entities)
-        .await?;
+    let mut edit_message = bot
+        .edit_message_text(chat_id, message.id, &text)
+        .entities(entities);
+
+    if let Some(keyboard_markup) = keyboard_markup {
+        edit_message = edit_message.reply_markup(keyboard_markup);
+    }
+
+    edit_message.await?;
 
     Ok(())
 }
@@ -351,34 +380,69 @@ async fn review(
     };
 
     bot.answer_callback_query(query.id).await?;
-    let _ = storage.remove_dialogue(review.chat_id).await;
 
     let loader = LANGUAGE_LOADER
-        .select_languages_negotiate(&[review.locale], NegotiationStrategy::Filtering);
+        .select_languages_negotiate(&[review.locale.clone()], NegotiationStrategy::Filtering);
 
-    if review.approved {
-        let invite_link = bot
-            .create_chat_invite_link(ChatId(config.primary_chat_id))
-            .expire_date(Utc::now().add(TimeDelta::hours(24)))
-            .member_limit(1)
+    let mut keyboard_markup = None;
+
+    match review.action {
+        ReviewAction::Approve => {
+            let invite_link = bot
+                .create_chat_invite_link(ChatId(config.primary_chat_id))
+                .expire_date(Utc::now().add(TimeDelta::hours(24)))
+                .member_limit(1)
+                .await?;
+
+            bot.send_message(
+                review.chat_id,
+                fl!(loader, "request-approved", link = invite_link.invite_link),
+            )
             .await?;
 
-        bot.send_message(
-            review.chat_id,
-            fl!(loader, "request-approved", link = invite_link.invite_link),
-        )
-        .await?;
-    } else {
-        bot.send_message(review.chat_id, fl!(loader, "request-denied"))
-            .await?;
+            let _ = storage.remove_dialogue(review.chat_id).await;
+        }
+        ReviewAction::Deny => {
+            bot.send_message(review.chat_id, fl!(loader, "request-denied"))
+                .await?;
+
+            let _ = storage.remove_dialogue(review.chat_id).await;
+        }
+        ReviewAction::Block => {
+            let _ = storage
+                .update_dialogue(review.chat_id, State::Blocked)
+                .await;
+
+            bot.send_message(review.chat_id, fl!(loader, "blocked"))
+                .await?;
+
+            let keyboard: Vec<Vec<InlineKeyboardButton>> =
+                vec![vec![InlineKeyboardButton::callback(
+                    "Unblock",
+                    Review::new(
+                        ReviewAction::Unblock,
+                        review.chat_id,
+                        review.user_id,
+                        review.locale,
+                    ),
+                )]];
+            keyboard_markup = Some(InlineKeyboardMarkup::new(keyboard));
+        }
+        ReviewAction::Unblock => {
+            let _ = storage.remove_dialogue(review.chat_id).await;
+
+            bot.send_message(review.chat_id, fl!(loader, "unblocked"))
+                .await?;
+        }
     }
 
     update_review_message(
         bot,
         message,
         ChatId(config.moderator_chat_id),
-        review.approved,
+        review.action,
         &query.from,
+        keyboard_markup,
     )
     .await?;
 

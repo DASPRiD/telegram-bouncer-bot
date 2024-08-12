@@ -7,3 +7,5 @@ cancelling-join-request = Cancelling the join request.
 request-approved = Your request has been approved. You can join the the chat now by following this link: {$link}
 request-denied = Your request has been denied. If you think this was an error, you can /start again.
 under-review = Your request is still under review.
+blocked = You have been blocked from further interactions with this bot.
+unblocked = You have been unblocked and can /start again.

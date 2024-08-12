@@ -6,8 +6,39 @@ use std::str::Utf8Error;
 use teloxide::prelude::ChatId;
 use teloxide::types::UserId;
 
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(u8)]
+pub enum ReviewAction {
+    Approve = 1,
+    Deny = 0,
+    Block = 2,
+    Unblock = 3,
+}
+
+impl From<ReviewAction> for u8 {
+    fn from(value: ReviewAction) -> Self {
+        value as u8
+    }
+}
+
+pub struct InvalidReviewActionError {}
+
+impl TryFrom<u8> for ReviewAction {
+    type Error = InvalidReviewActionError;
+
+    fn try_from(value: u8) -> Result<Self, Self::Error> {
+        match value {
+            1 => Ok(ReviewAction::Approve),
+            0 => Ok(ReviewAction::Deny),
+            2 => Ok(ReviewAction::Block),
+            3 => Ok(ReviewAction::Unblock),
+            _ => Err(InvalidReviewActionError {}),
+        }
+    }
+}
+
 pub struct Review {
-    pub approved: bool,
+    pub action: ReviewAction,
     pub chat_id: ChatId,
     pub user_id: UserId,
     pub locale: LanguageIdentifier,
@@ -15,13 +46,13 @@ pub struct Review {
 
 impl Review {
     pub fn new(
-        approved: bool,
+        action: ReviewAction,
         chat_id: ChatId,
         user_id: UserId,
         locale: LanguageIdentifier,
     ) -> Self {
         Self {
-            approved,
+            action,
             chat_id,
             user_id,
             locale,
@@ -34,7 +65,7 @@ impl From<Review> for String {
         let locale = review.locale.to_string();
 
         let mut buffer = Vec::with_capacity(32);
-        buffer.write_all(&[review.approved.into()]).unwrap();
+        buffer.write_all(&[review.action.into()]).unwrap();
         buffer.write_all(&review.chat_id.0.to_le_bytes()).unwrap();
         buffer.write_all(&review.user_id.0.to_le_bytes()).unwrap();
         buffer.write_all(&[locale.len() as u8]).unwrap();
@@ -48,7 +79,14 @@ impl From<Review> for String {
 pub enum TryFromError {
     InvalidBase64,
     TooShort,
+    InvalidReviewAction,
     InvalidLocale,
+}
+
+impl From<InvalidReviewActionError> for TryFromError {
+    fn from(_error: InvalidReviewActionError) -> Self {
+        TryFromError::InvalidReviewAction
+    }
 }
 
 impl From<DecodeError> for TryFromError {
@@ -80,7 +118,7 @@ impl TryFrom<String> for Review {
         }
 
         Ok(Self {
-            approved: buffer[0] != 0,
+            action: buffer[0].try_into()?,
             chat_id: ChatId(i64::from_le_bytes(buffer[1..9].try_into().unwrap())),
             user_id: UserId(u64::from_le_bytes(buffer[9..17].try_into().unwrap())),
             locale: std::str::from_utf8(&buffer[18..18 + locale_length])?
@@ -97,7 +135,7 @@ mod tests {
     #[test]
     fn encodes_to_base64() {
         let review = Review::new(
-            true,
+            ReviewAction::Approve,
             ChatId(123456),
             UserId(987654),
             "de-DE".parse().unwrap(),
@@ -112,7 +150,7 @@ mod tests {
         let data = "AUDiAQAAAAAABhIPAAAAAAAFZGUtREU".to_string();
         let review: Review = data.try_into().unwrap();
 
-        assert_eq!(review.approved, true);
+        assert_eq!(review.action, ReviewAction::Approve);
         assert_eq!(review.chat_id.0, 123456);
         assert_eq!(
             review.locale,

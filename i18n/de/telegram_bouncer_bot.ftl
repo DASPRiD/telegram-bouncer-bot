@@ -7,3 +7,5 @@ cancelling-join-request = Abbrechen der Beitrittsanfrage.
 request-approved = Deine Anfrage wurde genehmigt. Du kannst jetzt am Chat teilnehmen, indem du diesem Link folgst: {$link}
 request-denied = Deine Anfrage wurde abgelehnt. Wenn du glaubst, dass dies ein Fehler war, kannst du /start erneut aufrufen.
 under-review = Dein Antrag wird noch geprüft.
+blocked = Weitere Interaktionen mit diesem Bot wurden für dich gesperrt.
+unblocked = Deine Sperre wurde aufgehoben und du kannst erneut /start aufrufen.
