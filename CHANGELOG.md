@@ -1,3 +1,10 @@
+# [1.4.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.3.0...v1.4.0) (2024-08-25)
+
+
+### Features
+
+* add option to forward channel posts ([d2a4736](https://github.com/DASPRiD/telegram-bouncer-bot/commit/d2a47361dbd792cfc189fe70b794de6535e90d0a))
+
 # [1.3.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.2.0...v1.3.0) (2024-08-12)
 
 
