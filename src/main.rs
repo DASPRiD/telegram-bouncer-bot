@@ -39,6 +39,9 @@ pub struct Config {
     #[envconfig(from = "MODERATOR_CHAT_ID")]
     pub moderator_chat_id: i64,
 
+    #[envconfig(from = "CHANNEL_ID")]
+    pub channel_id: Option<i64>,
+
     #[envconfig(from = "STORAGE_PATH")]
     pub storage_path: Option<PathBuf>,
 }
@@ -132,10 +135,31 @@ fn schema() -> UpdateHandler<Box<dyn Error + Send + Sync + 'static>> {
         .branch(case![State::AwaitApproval { message_id }].endpoint(await_approval));
 
     let callback_query_handler = Update::filter_callback_query().endpoint(review);
+    let channel_post_handler = Update::filter_channel_post().endpoint(forward_channel_post);
+    let edited_channel_post_handler = Update::filter_edited_channel_post().endpoint(forward_channel_post);
 
     dialogue::enter::<Update, ErasedStorage<State>, State, _>()
         .branch(message_handler)
         .branch(callback_query_handler)
+        .branch(channel_post_handler)
+        .branch(edited_channel_post_handler)
+}
+
+async fn forward_channel_post(bot: Bot, msg: Message, config: Arc<Config>) -> HandlerResult {
+    let channel_id = match config.channel_id {
+        Some(channel_id) => ChatId(channel_id),
+        None => return Ok(()),
+    };
+
+    if msg.chat.id != channel_id {
+        return Ok(());
+    }
+
+    let primary_chat_id = ChatId(config.primary_chat_id);
+    let result = bot.forward_message(primary_chat_id, channel_id, msg.id).await?;
+    bot.pin_chat_message(primary_chat_id, result.id).await?;
+
+    Ok(())
 }
 
 fn locale_from_message(msg: &Message) -> LanguageIdentifier {

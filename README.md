@@ -39,6 +39,16 @@ Before you can run the bot, you need to do following steps:
 The bot can also run without persistent storage. This will make the bot forget any conversations it had upon restart.
 If this isn't a problem for you, simply remove the volume and the `STORAGE_PATH` env variable.
 
+## Linked channels
+
+When you link a public channel to your group, people can still join your group through that channel and circumvent the
+bouncer entirely. It is thus recommended that you remove the link and use this bot to forward and pin messages in your
+primary chat.
+
+To do so, allow the bot to pin messages in your primary chat and add it to the channel. Then add the following new
+environment variable: `CHANNEL_ID`. The bot will now forward any posts to your main chat and pin them. It will also
+forward edits and pin them again.
+
 ## Bot permissions
 
 After adding the bot to both your primary and your moderator chat, you need to give the bot the following administrator
