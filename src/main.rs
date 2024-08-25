@@ -136,7 +136,8 @@ fn schema() -> UpdateHandler<Box<dyn Error + Send + Sync + 'static>> {
 
     let callback_query_handler = Update::filter_callback_query().endpoint(review);
     let channel_post_handler = Update::filter_channel_post().endpoint(forward_channel_post);
-    let edited_channel_post_handler = Update::filter_edited_channel_post().endpoint(forward_channel_post);
+    let edited_channel_post_handler =
+        Update::filter_edited_channel_post().endpoint(forward_channel_post);
 
     dialogue::enter::<Update, ErasedStorage<State>, State, _>()
         .branch(message_handler)
@@ -156,7 +157,9 @@ async fn forward_channel_post(bot: Bot, msg: Message, config: Arc<Config>) -> Ha
     }
 
     let primary_chat_id = ChatId(config.primary_chat_id);
-    let result = bot.forward_message(primary_chat_id, channel_id, msg.id).await?;
+    let result = bot
+        .forward_message(primary_chat_id, channel_id, msg.id)
+        .await?;
     bot.pin_chat_message(primary_chat_id, result.id).await?;
 
     Ok(())
