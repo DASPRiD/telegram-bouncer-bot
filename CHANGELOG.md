@@ -1,3 +1,10 @@
+## [1.4.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.4.0...v1.4.1) (2024-09-01)
+
+
+### Bug Fixes
+
+* do not re-forward message on edits ([35f481e](https://github.com/DASPRiD/telegram-bouncer-bot/commit/35f481e09850c91944f1efb1bf4ff51e2f39eecc))
+
 # [1.4.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.3.0...v1.4.0) (2024-08-25)
 
 
