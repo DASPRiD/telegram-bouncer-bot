@@ -136,14 +136,11 @@ fn schema() -> UpdateHandler<Box<dyn Error + Send + Sync + 'static>> {
 
     let callback_query_handler = Update::filter_callback_query().endpoint(review);
     let channel_post_handler = Update::filter_channel_post().endpoint(forward_channel_post);
-    let edited_channel_post_handler =
-        Update::filter_edited_channel_post().endpoint(forward_channel_post);
 
     dialogue::enter::<Update, ErasedStorage<State>, State, _>()
         .branch(message_handler)
         .branch(callback_query_handler)
         .branch(channel_post_handler)
-        .branch(edited_channel_post_handler)
 }
 
 async fn forward_channel_post(bot: Bot, msg: Message, config: Arc<Config>) -> HandlerResult {
