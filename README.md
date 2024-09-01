@@ -46,8 +46,8 @@ bouncer entirely. It is thus recommended that you remove the link and use this b
 primary chat.
 
 To do so, allow the bot to pin messages in your primary chat and add it to the channel. Then add the following new
-environment variable: `CHANNEL_ID`. The bot will now forward any posts to your main chat and pin them. It will also
-forward edits and pin them again.
+environment variable: `CHANNEL_ID`. The bot will now forward any posts to your main chat and pin them. Edits are not
+automatically forwarded, as the first reaction to a post after a few minutes triggers an false-positive edit event.
 
 ## Bot permissions
 
