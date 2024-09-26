@@ -9,3 +9,4 @@ request-denied = Deine Anfrage wurde abgelehnt. Wenn du glaubst, dass dies ein F
 under-review = Dein Antrag wird noch geprüft.
 blocked = Weitere Interaktionen mit diesem Bot wurden für dich gesperrt.
 unblocked = Deine Sperre wurde aufgehoben und du kannst erneut /start aufrufen.
+contact-requested = Wir benötigen weitere Informationen, bitte kontaktiere {$moderator}\.

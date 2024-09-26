@@ -1,3 +1,4 @@
+use std::env;
 use std::error::Error;
 use std::ops::Add;
 use std::path::PathBuf;
@@ -9,9 +10,12 @@ use i18n_embed::fluent::{fluent_language_loader, FluentLanguageLoader, Negotiati
 use i18n_embed::unic_langid::LanguageIdentifier;
 use i18n_embed::LanguageLoader;
 use i18n_embed_fl::fl;
+use log::{error, info};
 use once_cell::sync::Lazy;
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
+use structured_logger::async_json::new_writer;
+use structured_logger::Builder;
 use teloxide::dispatching::dialogue::serializer::Json;
 use teloxide::dispatching::dialogue::{ErasedStorage, SqliteStorage, Storage};
 use teloxide::types::{MessageId, ParseMode, User};
@@ -89,7 +93,14 @@ static LANGUAGE_LOADER: Lazy<FluentLanguageLoader> = Lazy::new(|| {
 
 #[tokio::main]
 async fn main() {
-    pretty_env_logger::init();
+    if env::var("ENABLE_STRUCTURED_LOG").is_ok() {
+        Builder::with_level(&env::var("RUST_LOG").unwrap_or("error".to_string()))
+            .with_target_writer("*", new_writer(tokio::io::stdout()))
+            .init();
+    } else {
+        env_logger::init();
+    }
+
     let bot = Bot::from_env();
 
     let loader: FluentLanguageLoader = fluent_language_loader!();
@@ -111,8 +122,13 @@ async fn main() {
         InMemStorage::new().erase()
     };
 
+    info!("Bot started");
+
     Dispatcher::builder(bot, schema())
         .dependencies(dptree::deps![storage, Arc::new(config)])
+        .default_handler(|_| async move {
+            // We ignore any update we don't know
+        })
         .enable_ctrlc_handler()
         .build()
         .dispatch()
@@ -301,20 +317,28 @@ async fn receive_reason(
         None => return Ok(()),
     };
 
-    let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![vec![
-        InlineKeyboardButton::callback(
-            "Approve",
-            Review::new(ReviewAction::Approve, msg.chat.id, user.id, locale.clone()),
-        ),
-        InlineKeyboardButton::callback(
-            "Deny",
-            Review::new(ReviewAction::Deny, msg.chat.id, user.id, locale.clone()),
-        ),
-        InlineKeyboardButton::callback(
-            "Block",
-            Review::new(ReviewAction::Block, msg.chat.id, user.id, locale),
-        ),
-    ]];
+    let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![
+        vec![
+            InlineKeyboardButton::callback(
+                "Approve",
+                Review::new(ReviewAction::Approve, msg.chat.id, user.id, locale.clone()),
+            ),
+            InlineKeyboardButton::callback(
+                "Deny",
+                Review::new(ReviewAction::Deny, msg.chat.id, user.id, locale.clone()),
+            ),
+        ],
+        vec![
+            InlineKeyboardButton::callback(
+                "Block",
+                Review::new(ReviewAction::Block, msg.chat.id, user.id, locale.clone()),
+            ),
+            InlineKeyboardButton::callback(
+                "Request contact",
+                Review::new(ReviewAction::RequestContact, msg.chat.id, user.id, locale),
+            ),
+        ],
+    ];
     let keyboard_markup = InlineKeyboardMarkup::new(keyboard);
 
     let moderator_message = bot
@@ -337,6 +361,9 @@ async fn receive_reason(
             message_id: moderator_message.id,
         })
         .await?;
+
+    info!(user:debug; "Join reason received");
+
     Ok(())
 }
 
@@ -365,6 +392,7 @@ async fn update_review_message(
             ReviewAction::Deny => "Denied",
             ReviewAction::Block => "Blocked",
             ReviewAction::Unblock => "Unblocked",
+            ReviewAction::RequestContact => "Contact requested",
         },
         get_plaintext_display_name(reviewer),
     ));
@@ -395,14 +423,21 @@ async fn review(
 
     let review: Review = match data.try_into() {
         Ok(review) => review,
-        Err(_) => return Ok(()),
+        Err(error) => {
+            error!(error:err; "Failed to parse review");
+            return Ok(());
+        }
     };
 
     let message = match query.message {
         Some(message) => message,
-        None => return Ok(()),
+        None => {
+            error!("Review has no message attached");
+            return Ok(());
+        }
     };
 
+    info!(review:debug; "Received review");
     bot.answer_callback_query(query.id).await?;
 
     let loader = LANGUAGE_LOADER
@@ -457,6 +492,41 @@ async fn review(
 
             bot.send_message(review.chat_id, fl!(loader, "unblocked"))
                 .await?;
+        }
+        ReviewAction::RequestContact => {
+            println!(
+                "{}",
+                fl!(
+                    loader,
+                    "contact-requested",
+                    moderator = get_markdown_display_name(&query.from)
+                )
+            );
+
+            bot.send_message(
+                review.chat_id,
+                fl!(
+                    loader,
+                    "contact-requested",
+                    moderator = get_markdown_display_name(&query.from)
+                ),
+            )
+            .parse_mode(ParseMode::MarkdownV2)
+            .await?;
+
+            let _ = storage.remove_dialogue(review.chat_id).await;
+
+            let keyboard: Vec<Vec<InlineKeyboardButton>> =
+                vec![vec![InlineKeyboardButton::callback(
+                    "Block",
+                    Review::new(
+                        ReviewAction::Block,
+                        review.chat_id,
+                        review.user_id,
+                        review.locale,
+                    ),
+                )]];
+            keyboard_markup = Some(InlineKeyboardMarkup::new(keyboard));
         }
     }
 

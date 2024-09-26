@@ -39,6 +39,14 @@ Before you can run the bot, you need to do following steps:
 The bot can also run without persistent storage. This will make the bot forget any conversations it had upon restart.
 If this isn't a problem for you, simply remove the volume and the `STORAGE_PATH` env variable.
 
+## Logging
+
+By default, the bot will only log errors in human-readable format. This can be adjusted in two ways:
+
+- You can switch to structured (NDJSON) logging by setting the `ENABLE_STRUCTURED_LOG` environment variable to any
+  value.
+- You can modify the minimum log level via the `RUST_LOG` environment variable.
+
 ## Linked channels
 
 When you link a public channel to your group, people can still join your group through that channel and circumvent the

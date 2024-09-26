@@ -9,3 +9,4 @@ request-denied = Your request has been denied. If you think this was an error, y
 under-review = Your request is still under review.
 blocked = You have been blocked from further interactions with this bot.
 unblocked = You have been unblocked and can /start again.
+contact-requested = We require more information, please contact {$moderator}\.

@@ -5,6 +5,7 @@ use std::io::Write;
 use std::str::Utf8Error;
 use teloxide::prelude::ChatId;
 use teloxide::types::UserId;
+use thiserror::Error;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u8)]
@@ -13,6 +14,7 @@ pub enum ReviewAction {
     Deny = 0,
     Block = 2,
     Unblock = 3,
+    RequestContact = 4,
 }
 
 impl From<ReviewAction> for u8 {
@@ -21,6 +23,7 @@ impl From<ReviewAction> for u8 {
     }
 }
 
+#[derive(Debug)]
 pub struct InvalidReviewActionError {}
 
 impl TryFrom<u8> for ReviewAction {
@@ -32,11 +35,13 @@ impl TryFrom<u8> for ReviewAction {
             0 => Ok(ReviewAction::Deny),
             2 => Ok(ReviewAction::Block),
             3 => Ok(ReviewAction::Unblock),
+            4 => Ok(ReviewAction::RequestContact),
             _ => Err(InvalidReviewActionError {}),
         }
     }
 }
 
+#[derive(Debug)]
 pub struct Review {
     pub action: ReviewAction,
     pub chat_id: ChatId,
@@ -75,11 +80,15 @@ impl From<Review> for String {
     }
 }
 
-#[derive(Debug)]
+#[derive(Error, Debug)]
 pub enum TryFromError {
+    #[error("Invalid Base64 encoded string")]
     InvalidBase64,
+    #[error("Buffer is too short")]
     TooShort,
+    #[error("Invalid review action")]
     InvalidReviewAction,
+    #[error("Invalid locale")]
     InvalidLocale,
 }
 
