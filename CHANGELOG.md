@@ -1,3 +1,10 @@
+# [1.5.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.4.1...v1.5.0) (2024-09-26)
+
+
+### Features
+
+* add request contact feature ([5fc519d](https://github.com/DASPRiD/telegram-bouncer-bot/commit/5fc519d35f0a7c8c655c20df1a3453369cab7ce0))
+
 ## [1.4.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.4.0...v1.4.1) (2024-09-01)
 
 
