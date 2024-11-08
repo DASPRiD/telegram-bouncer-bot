@@ -25,6 +25,7 @@ use teloxide::{
     prelude::*,
     types::{InlineKeyboardButton, InlineKeyboardMarkup},
     utils::command::BotCommands,
+    ApiError, RequestError,
 };
 
 use crate::review::{Review, ReviewAction};
@@ -374,6 +375,7 @@ async fn update_review_message(
     action: ReviewAction,
     reviewer: &User,
     keyboard_markup: Option<InlineKeyboardMarkup>,
+    is_bot_blocked: bool,
 ) -> HandlerResult {
     let mut text = match message.text() {
         Some(text) => text.to_string(),
@@ -397,17 +399,31 @@ async fn update_review_message(
         get_plaintext_display_name(reviewer),
     ));
 
+    if is_bot_blocked {
+        text.push_str("\n\n**User has blocked this bot**");
+    }
+
     let mut edit_message = bot
         .edit_message_text(chat_id, message.id, &text)
         .entities(entities);
 
-    if let Some(keyboard_markup) = keyboard_markup {
-        edit_message = edit_message.reply_markup(keyboard_markup);
+    if !is_bot_blocked {
+        if let Some(keyboard_markup) = keyboard_markup {
+            edit_message = edit_message.reply_markup(keyboard_markup);
+        }
     }
 
     edit_message.await?;
 
     Ok(())
+}
+
+fn is_bot_blocked_result(result: Result<Message, RequestError>) -> Result<bool, RequestError> {
+    match result {
+        Ok(_) => Ok(false),
+        Err(RequestError::Api(ApiError::BotBlocked)) => Ok(true),
+        Err(error) => Err(error),
+    }
 }
 
 async fn review(
@@ -444,6 +460,7 @@ async fn review(
         .select_languages_negotiate(&[review.locale.clone()], NegotiationStrategy::Filtering);
 
     let mut keyboard_markup = None;
+    let is_bot_blocked;
 
     match review.action {
         ReviewAction::Approve => {
@@ -453,17 +470,21 @@ async fn review(
                 .member_limit(1)
                 .await?;
 
-            bot.send_message(
-                review.chat_id,
-                fl!(loader, "request-approved", link = invite_link.invite_link),
-            )
-            .await?;
+            is_bot_blocked = is_bot_blocked_result(
+                bot.send_message(
+                    review.chat_id,
+                    fl!(loader, "request-approved", link = invite_link.invite_link),
+                )
+                .await,
+            )?;
 
             let _ = storage.remove_dialogue(review.chat_id).await;
         }
         ReviewAction::Deny => {
-            bot.send_message(review.chat_id, fl!(loader, "request-denied"))
-                .await?;
+            is_bot_blocked = is_bot_blocked_result(
+                bot.send_message(review.chat_id, fl!(loader, "request-denied"))
+                    .await,
+            )?;
 
             let _ = storage.remove_dialogue(review.chat_id).await;
         }
@@ -472,8 +493,10 @@ async fn review(
                 .update_dialogue(review.chat_id, State::Blocked)
                 .await;
 
-            bot.send_message(review.chat_id, fl!(loader, "blocked"))
-                .await?;
+            is_bot_blocked = is_bot_blocked_result(
+                bot.send_message(review.chat_id, fl!(loader, "blocked"))
+                    .await,
+            )?;
 
             let keyboard: Vec<Vec<InlineKeyboardButton>> =
                 vec![vec![InlineKeyboardButton::callback(
@@ -490,8 +513,10 @@ async fn review(
         ReviewAction::Unblock => {
             let _ = storage.remove_dialogue(review.chat_id).await;
 
-            bot.send_message(review.chat_id, fl!(loader, "unblocked"))
-                .await?;
+            is_bot_blocked = is_bot_blocked_result(
+                bot.send_message(review.chat_id, fl!(loader, "unblocked"))
+                    .await,
+            )?;
         }
         ReviewAction::RequestContact => {
             println!(
@@ -503,16 +528,18 @@ async fn review(
                 )
             );
 
-            bot.send_message(
-                review.chat_id,
-                fl!(
-                    loader,
-                    "contact-requested",
-                    moderator = get_markdown_display_name(&query.from)
-                ),
-            )
-            .parse_mode(ParseMode::MarkdownV2)
-            .await?;
+            is_bot_blocked = is_bot_blocked_result(
+                bot.send_message(
+                    review.chat_id,
+                    fl!(
+                        loader,
+                        "contact-requested",
+                        moderator = get_markdown_display_name(&query.from)
+                    ),
+                )
+                .parse_mode(ParseMode::MarkdownV2)
+                .await,
+            )?;
 
             let _ = storage.remove_dialogue(review.chat_id).await;
 
@@ -537,6 +564,7 @@ async fn review(
         review.action,
         &query.from,
         keyboard_markup,
+        is_bot_blocked,
     )
     .await?;
 
