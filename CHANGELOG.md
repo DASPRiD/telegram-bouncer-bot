@@ -1,3 +1,10 @@
+## [1.6.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.6.0...v1.6.1) (2024-11-08)
+
+
+### Bug Fixes
+
+* remove markdown from plain text message ([b766816](https://github.com/DASPRiD/telegram-bouncer-bot/commit/b76681631da9d0eed65979af2851624f0b584882))
+
 # [1.6.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.5.0...v1.6.0) (2024-11-08)
 
 
