@@ -1,3 +1,10 @@
+# [1.6.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.5.0...v1.6.0) (2024-11-08)
+
+
+### Features
+
+* detect when user has blocked the bot ([bcb5d2d](https://github.com/DASPRiD/telegram-bouncer-bot/commit/bcb5d2db1433717c6ee64378a0deb914218818cf))
+
 # [1.5.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.4.1...v1.5.0) (2024-09-26)
 
 
