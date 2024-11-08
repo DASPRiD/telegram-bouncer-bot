@@ -400,7 +400,7 @@ async fn update_review_message(
     ));
 
     if is_bot_blocked {
-        text.push_str("\n\n**User has blocked this bot**");
+        text.push_str("\n\nUser has blocked this bot");
     }
 
     let mut edit_message = bot
