@@ -204,12 +204,29 @@ async fn blocked(bot: Bot, _dialogue: JoinDialogue, msg: Message) -> HandlerResu
     Ok(())
 }
 
-async fn start(bot: Bot, dialogue: JoinDialogue, msg: Message) -> HandlerResult {
+async fn start(bot: Bot, dialogue: JoinDialogue, config: Arc<Config>, msg: Message) -> HandlerResult {
     if !msg.chat.is_private() {
         return Ok(());
     }
 
+    let Some(from) = msg.from() else {
+        return Ok(());
+    };
+
     let loader = loader_from_message(&msg);
+
+    let is_present = match bot.get_chat_member(ChatId(config.primary_chat_id), from.id).await {
+        Ok(chat_member) => chat_member.is_present(),
+        Err(RequestError::Api(ApiError::UserNotFound)) => false,
+        Err(error) => return Err(error.into()),
+    };
+
+    if is_present {
+        bot.send_message(msg.chat.id, fl!(loader, "present-member"))
+            .await?;
+        return Ok(());
+    }
+
     bot.send_message(msg.chat.id, fl!(loader, "reason-prompt"))
         .await?;
     dialogue.update(State::ReceiveReason).await?;

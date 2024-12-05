@@ -1,5 +1,6 @@
 privacy-policy = We store your user ID and display name for the duration of the review, after which they will be deleted. No other data are collected.
 invalid-state = Unable to handle the message. Type /help to see the usage.
+present-member = You are already a member of the chat.
 reason-prompt = Please tell me in a few words why you want to join this chat.
 reason-missing = Please send me your reason to join.
 reason-received = Thank you, our moderators will review your join request.

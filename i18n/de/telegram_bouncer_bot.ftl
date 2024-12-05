@@ -1,5 +1,6 @@
 privacy-policy = Wir speichern deine user ID und Anzeigenamen für die Dauer der Prüfung, nach dem wir diese wieder löschen. Es werden keine weiterne Daten erhoben.
 invalid-state = Die Nachricht kann nicht verarbeitet werden. Gebe /help ein, um die Verwendung anzuzeigen.
+present-member = Du bist bereits Teilnehmer im Chat.
 reason-prompt = Sage mir bitte in wenigen Worten, warum du an diesem Chat teilnehmen möchtest.
 reason-missing = Bitte sende mir deinen Grund für den Beitritt.
 reason-received = Vielen Dank, unsere Moderatoren werden deine Beitrittsanfrage prüfen.
