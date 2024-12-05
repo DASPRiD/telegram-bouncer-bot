@@ -1,3 +1,10 @@
+# [1.7.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.6.1...v1.7.0) (2024-12-05)
+
+
+### Features
+
+* inform users when they are already a member of the primary chat ([5cae1bb](https://github.com/DASPRiD/telegram-bouncer-bot/commit/5cae1bba83356968cdbc64ae292f25614c752320))
+
 ## [1.6.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.6.0...v1.6.1) (2024-11-08)
 
 
