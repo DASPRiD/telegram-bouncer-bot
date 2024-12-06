@@ -1,3 +1,10 @@
+# [1.8.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.7.0...v1.8.0) (2024-12-06)
+
+
+### Features
+
+* add info to moderator message when user is banned from chat ([cb41230](https://github.com/DASPRiD/telegram-bouncer-bot/commit/cb41230e254ed59ad5067671ab1aa739185b5282))
+
 # [1.7.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.6.1...v1.7.0) (2024-12-05)
 
 
