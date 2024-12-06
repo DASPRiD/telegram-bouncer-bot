@@ -367,12 +367,26 @@ async fn receive_reason(
     ];
     let keyboard_markup = InlineKeyboardMarkup::new(keyboard);
 
+    let is_banned = match bot
+        .get_chat_member(ChatId(config.primary_chat_id), user.id)
+        .await
+    {
+        Ok(chat_member) => chat_member.is_banned(),
+        Err(RequestError::Api(ApiError::UserNotFound)) => false,
+        Err(error) => return Err(error.into()),
+    };
+
     let moderator_message = bot
         .send_message(
             ChatId(config.moderator_chat_id),
             format!(
-                "{} would like to join for the following reason:\n\n{}",
+                "{}{} would like to join for the following reason:\n\n{}",
                 get_markdown_display_name(user),
+                if is_banned {
+                    " **(banned from chat)**"
+                } else {
+                    ""
+                },
                 escape(reason.trim()),
             ),
         )
