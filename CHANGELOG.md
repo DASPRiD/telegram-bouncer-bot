@@ -1,3 +1,10 @@
+# [1.9.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.8.0...v1.9.0) (2025-02-13)
+
+
+### Features
+
+* add french translation ([129ef89](https://github.com/DASPRiD/telegram-bouncer-bot/commit/129ef89cfed2849563308080e3432582dc92cd35))
+
 # [1.8.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.7.0...v1.8.0) (2024-12-06)
 
 
