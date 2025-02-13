@@ -1,0 +1,13 @@
+privacy-policy = Nous conservons votre User ID et votre nom d'affichage pendant la durée de l'examen, après quoi ils seront supprimés. Aucune autre donnée n'est collectée.
+invalid-state = Impossible de traiter le message. Tapez /help pour voir l'utilisation.
+present-member = Vous êtes déjà membre dans ce tchat.
+reason-prompt = Veuillez me dire en quelques mots pourquoi vous voulez rejoindre ce tchat.
+reason-missing = Veuillez me dire pourquoi vous voulez rejoindre ce tchat.
+reason-received = Merci, nos modérateurs vont examiner votre demande d'inclusion.
+cancelling-join-request = Annulation de la demande d'inclusion.
+request-approved = Votre demande a été approuvée. Vous pouvez rejoindre le chat maintenant en suivant ce lien : {$link}
+request-denied = Votre demande a été refusée. Si vous pensez qu'il s'agit d'une erreur, vous pouvez recommencer.
+under-review = Votre demande est toujours en cours d'examen.
+blocked = Vous avez été banni d'interagir avec ce bot.
+unblocked = Vous avez été débloqué et vous pouvez de nouveau utiliser /start.
+contact-requested = Nous avons besoin de plus d'informations, veuillez contacter {$moderator}\.
