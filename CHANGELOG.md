@@ -1,3 +1,10 @@
+## [1.9.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.9.0...v1.9.1) (2025-06-14)
+
+
+### Bug Fixes
+
+* quote parentheses in banned from chat message ([1ac3095](https://github.com/DASPRiD/telegram-bouncer-bot/commit/1ac309569bb3bc131fcf65887d5d7324864d9e89))
+
 # [1.9.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.8.0...v1.9.0) (2025-02-13)
 
 
