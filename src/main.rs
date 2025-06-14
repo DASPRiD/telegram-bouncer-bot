@@ -383,7 +383,7 @@ async fn receive_reason(
                 "{}{} would like to join for the following reason:\n\n{}",
                 get_markdown_display_name(user),
                 if is_banned {
-                    " **(banned from chat)**"
+                    " **\\(banned from chat\\)**"
                 } else {
                     ""
                 },
