@@ -343,12 +343,33 @@ async fn receive_reason(
         None => return Ok(()),
     };
 
+    let is_banned = match bot
+        .get_chat_member(ChatId(config.primary_chat_id), user.id)
+        .await
+    {
+        Ok(chat_member) => chat_member.is_banned(),
+        Err(RequestError::Api(ApiError::UserNotFound)) => false,
+        Err(error) => return Err(error.into()),
+    };
+
     let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![
         vec![
-            InlineKeyboardButton::callback(
-                "Approve",
-                Review::new(ReviewAction::Approve, msg.chat.id, user.id, locale.clone()),
-            ),
+            if is_banned {
+                InlineKeyboardButton::callback(
+                    "Unban & Approve",
+                    Review::new(
+                        ReviewAction::UnbanAndApprove,
+                        msg.chat.id,
+                        user.id,
+                        locale.clone(),
+                    ),
+                )
+            } else {
+                InlineKeyboardButton::callback(
+                    "Approve",
+                    Review::new(ReviewAction::Approve, msg.chat.id, user.id, locale.clone()),
+                )
+            },
             InlineKeyboardButton::callback(
                 "Deny",
                 Review::new(ReviewAction::Deny, msg.chat.id, user.id, locale.clone()),
@@ -367,15 +388,6 @@ async fn receive_reason(
     ];
     let keyboard_markup = InlineKeyboardMarkup::new(keyboard);
 
-    let is_banned = match bot
-        .get_chat_member(ChatId(config.primary_chat_id), user.id)
-        .await
-    {
-        Ok(chat_member) => chat_member.is_banned(),
-        Err(RequestError::Api(ApiError::UserNotFound)) => false,
-        Err(error) => return Err(error.into()),
-    };
-
     let moderator_message = bot
         .send_message(
             ChatId(config.moderator_chat_id),
@@ -383,7 +395,7 @@ async fn receive_reason(
                 "{}{} would like to join for the following reason:\n\n{}",
                 get_markdown_display_name(user),
                 if is_banned {
-                    " **\\(banned from chat\\)**"
+                    " *\\[__BANNED__]\\)*"
                 } else {
                     ""
                 },
@@ -430,6 +442,7 @@ async fn update_review_message(
         "\n\n{} by {}",
         match action {
             ReviewAction::Approve => "Approved",
+            ReviewAction::UnbanAndApprove => "Unbanned & Approved",
             ReviewAction::Deny => "Denied",
             ReviewAction::Block => "Blocked",
             ReviewAction::Unblock => "Unblocked",
@@ -502,7 +515,12 @@ async fn review(
     let is_bot_blocked;
 
     match review.action {
-        ReviewAction::Approve => {
+        ReviewAction::Approve | ReviewAction::UnbanAndApprove => {
+            if let ReviewAction::UnbanAndApprove = review.action {
+                bot.unban_chat_member(review.chat_id, review.user_id)
+                    .await?;
+            }
+
             let invite_link = bot
                 .create_chat_invite_link(ChatId(config.primary_chat_id))
                 .expire_date(Utc::now().add(TimeDelta::hours(24)))

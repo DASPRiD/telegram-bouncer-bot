@@ -15,6 +15,7 @@ pub enum ReviewAction {
     Block = 2,
     Unblock = 3,
     RequestContact = 4,
+    UnbanAndApprove = 5,
 }
 
 impl From<ReviewAction> for u8 {
