@@ -1,3 +1,10 @@
+# [1.10.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.9.1...v1.10.0) (2025-06-14)
+
+
+### Features
+
+* add option to unban and approve a banned person ([ad1399e](https://github.com/DASPRiD/telegram-bouncer-bot/commit/ad1399ec0ccc56feac90f1886e96ee1e4eba6ba7))
+
 ## [1.9.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.9.0...v1.9.1) (2025-06-14)
 
 
