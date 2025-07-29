@@ -1,3 +1,10 @@
+## [1.11.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.11.0...v1.11.1) (2025-07-29)
+
+
+### Bug Fixes
+
+* do not load countersign list on startup ([b57d737](https://github.com/DASPRiD/telegram-bouncer-bot/commit/b57d737c4e9870733b134a047043f247912ac38a))
+
 # [1.11.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.10.0...v1.11.0) (2025-07-29)
 
 
