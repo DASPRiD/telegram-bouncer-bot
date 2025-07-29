@@ -1,3 +1,10 @@
+# [1.11.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.10.0...v1.11.0) (2025-07-29)
+
+
+### Features
+
+* add countersign scammer detection ([5cf6078](https://github.com/DASPRiD/telegram-bouncer-bot/commit/5cf607885625f3e199a1be60030c4666bc05b99d))
+
 # [1.10.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.9.1...v1.10.0) (2025-06-14)
 
 
