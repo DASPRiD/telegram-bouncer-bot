@@ -124,9 +124,9 @@ async fn main() {
         InMemStorage::new().erase()
     };
 
-    let countersign = Countersign::new().await;
+    let countersign = Countersign::new();
 
-    info!("Bot started");
+    info!("bot started");
 
     Dispatcher::builder(bot, schema())
         .dependencies(dptree::deps![
