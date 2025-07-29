@@ -4,32 +4,33 @@ use std::ops::Add;
 use std::path::PathBuf;
 use std::sync::Arc;
 
+use crate::countersign::Countersign;
+use crate::review::{Review, ReviewAction};
 use chrono::{TimeDelta, Utc};
 use envconfig::Envconfig;
-use i18n_embed::fluent::{fluent_language_loader, FluentLanguageLoader, NegotiationStrategy};
-use i18n_embed::unic_langid::LanguageIdentifier;
 use i18n_embed::LanguageLoader;
+use i18n_embed::fluent::{FluentLanguageLoader, NegotiationStrategy, fluent_language_loader};
+use i18n_embed::unic_langid::LanguageIdentifier;
 use i18n_embed_fl::fl;
-use log::{error, info};
+use log::{error, info, warn};
 use once_cell::sync::Lazy;
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
-use structured_logger::async_json::new_writer;
 use structured_logger::Builder;
+use structured_logger::async_json::new_writer;
 use teloxide::dispatching::dialogue::serializer::Json;
 use teloxide::dispatching::dialogue::{ErasedStorage, SqliteStorage, Storage};
-use teloxide::types::{MessageId, ParseMode, User};
+use teloxide::types::{MaybeInaccessibleMessage, MessageId, ParseMode, User};
 use teloxide::utils::markdown::escape;
 use teloxide::{
-    dispatching::{dialogue, dialogue::InMemStorage, UpdateHandler},
+    ApiError, RequestError,
+    dispatching::{UpdateHandler, dialogue, dialogue::InMemStorage},
     prelude::*,
     types::{InlineKeyboardButton, InlineKeyboardMarkup},
     utils::command::BotCommands,
-    ApiError, RequestError,
 };
 
-use crate::review::{Review, ReviewAction};
-
+mod countersign;
 mod review;
 
 type JoinDialogue = Dialogue<State, ErasedStorage<State>>;
@@ -106,7 +107,7 @@ async fn main() {
 
     let loader: FluentLanguageLoader = fluent_language_loader!();
     loader
-        .load_languages(&Localizations, &[loader.fallback_language()])
+        .load_languages(&Localizations, &[loader.fallback_language().clone()])
         .unwrap();
 
     let config = Config::init_from_env().unwrap();
@@ -123,10 +124,16 @@ async fn main() {
         InMemStorage::new().erase()
     };
 
+    let countersign = Countersign::new().await;
+
     info!("Bot started");
 
     Dispatcher::builder(bot, schema())
-        .dependencies(dptree::deps![storage, Arc::new(config)])
+        .dependencies(dptree::deps![
+            storage,
+            Arc::new(config),
+            Arc::new(countersign)
+        ])
         .default_handler(|_| async move {
             // We ignore any update we don't know
         })
@@ -180,7 +187,7 @@ async fn forward_channel_post(bot: Bot, msg: Message, config: Arc<Config>) -> Ha
 }
 
 fn locale_from_message(msg: &Message) -> LanguageIdentifier {
-    match msg.from() {
+    match msg.from.as_ref() {
         Some(user) => user.language_code.clone().unwrap_or("en".to_string()),
         None => "en".to_string(),
     }
@@ -214,7 +221,7 @@ async fn start(
         return Ok(());
     }
 
-    let Some(from) = msg.from() else {
+    let Some(from) = msg.from.as_ref() else {
         return Ok(());
     };
 
@@ -324,6 +331,7 @@ async fn receive_reason(
     dialogue: JoinDialogue,
     msg: Message,
     config: Arc<Config>,
+    countersign: Arc<Countersign>,
 ) -> HandlerResult {
     let locale = locale_from_message(&msg);
     let loader =
@@ -338,7 +346,7 @@ async fn receive_reason(
         }
     };
 
-    let user = match msg.from() {
+    let user = match msg.from.as_ref() {
         Some(user) => user,
         None => return Ok(()),
     };
@@ -351,6 +359,8 @@ async fn receive_reason(
         Err(RequestError::Api(ApiError::UserNotFound)) => false,
         Err(error) => return Err(error.into()),
     };
+
+    let is_known_scammer = countersign.is_known_scammer(user.id).await;
 
     let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![
         vec![
@@ -392,10 +402,15 @@ async fn receive_reason(
         .send_message(
             ChatId(config.moderator_chat_id),
             format!(
-                "{}{} would like to join for the following reason:\n\n{}",
+                "{}{} would like to join for the following reason:\n\n{}{}",
                 get_markdown_display_name(user),
                 if is_banned {
                     " *\\[__BANNED__]\\)*"
+                } else {
+                    ""
+                },
+                if is_known_scammer {
+                    " *\\[__KNOWN SCAMMER__]\\)*"
                 } else {
                     ""
                 },
@@ -613,6 +628,14 @@ async fn review(
             keyboard_markup = Some(InlineKeyboardMarkup::new(keyboard));
         }
     }
+
+    let message = match message {
+        MaybeInaccessibleMessage::Regular(message) => *message,
+        _ => {
+            warn!("message is inaccessible, skipping update");
+            return Ok(());
+        }
+    };
 
     update_review_message(
         bot,

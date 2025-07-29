@@ -5,25 +5,24 @@ version = "1.10.0"
 authors = ["Ben Scholzen (DASPRiD) <mail@dasprids.de>"]
 readme = "README.md"
 license-file = "LICENSE"
-edition = "2021"
+edition = "2024"
 
 [dependencies]
 base64 = "0.22.1"
-chrono = "0.4.38"
-envconfig = "0.10.0"
-futures = "0.3.30"
-i18n-embed = { version = "0.14.1", features = ["fluent-system"] }
-i18n-embed-fl = "0.8.0"
-log = { version = "0.4.22", features = ["kv", "kv_std"] }
-once_cell = "1.19.0"
-pretty_env_logger = "0.5.0"
-rust-embed = "8.5.0"
+chrono = "0.4.41"
+envconfig = "0.11.0"
+i18n-embed = { version = "0.16.0", features = ["fluent-system"] }
+i18n-embed-fl = "0.10.0"
+log = { version = "0.4.27", features = ["kv", "kv_std"] }
+once_cell = "1.21.3"
+rust-embed = "8.7.2"
 teloxide = { git = "https://github.com/teloxide/teloxide.git", branch = "master", default-features = false, features = ["rustls", "ctrlc_handler", "sqlite-storage-rustls", "macros"] }
-thiserror = "1.0.62"
-tokio = { version = "1.38.0", features = ["rt-multi-thread", "macros"] }
-serde = { version = "1.0.204", features = ["derive"] }
-structured-logger = "1.0.3"
-env_logger = { version = "0.11.5", features = ["unstable-kv"] }
+thiserror = "2.0.12"
+tokio = { version = "1.47.0", features = ["rt-multi-thread", "macros"] }
+serde = { version = "1.0.219", features = ["derive"] }
+structured-logger = "1.0.4"
+env_logger = { version = "0.11.8", features = ["unstable-kv"] }
+reqwest = { version = "0.12.22", default-features = false, features = ["http2", "rustls-tls", "charset", "system-proxy"] }
 
 [profile.release]
 strip = true
