@@ -441,7 +441,7 @@ async fn update_review_message(
     action: ReviewAction,
     reviewer: &User,
     keyboard_markup: Option<InlineKeyboardMarkup>,
-    is_bot_blocked: bool,
+    send_result: SendResult,
 ) -> HandlerResult {
     let mut text = match message.text() {
         Some(text) => text.to_string(),
@@ -466,18 +466,20 @@ async fn update_review_message(
         get_plaintext_display_name(reviewer),
     ));
 
-    if is_bot_blocked {
-        text.push_str("\n\nUser has blocked this bot");
+    match send_result {
+        SendResult::Sent => {}
+        SendResult::BotBlocked => text.push_str("\n\nUser has blocked this bot"),
+        SendResult::UserDeactivated => text.push_str("\n\nUser has a deactivated account"),
     }
 
     let mut edit_message = bot
         .edit_message_text(chat_id, message.id, &text)
         .entities(entities);
 
-    if !is_bot_blocked {
-        if let Some(keyboard_markup) = keyboard_markup {
-            edit_message = edit_message.reply_markup(keyboard_markup);
-        }
+    if matches!(send_result, SendResult::Sent)
+        && let Some(keyboard_markup) = keyboard_markup
+    {
+        edit_message = edit_message.reply_markup(keyboard_markup);
     }
 
     edit_message.await?;
@@ -485,10 +487,17 @@ async fn update_review_message(
     Ok(())
 }
 
-fn is_bot_blocked_result(result: Result<Message, RequestError>) -> Result<bool, RequestError> {
+enum SendResult {
+    Sent,
+    BotBlocked,
+    UserDeactivated,
+}
+
+fn check_send_result(result: Result<Message, RequestError>) -> Result<SendResult, RequestError> {
     match result {
-        Ok(_) => Ok(false),
-        Err(RequestError::Api(ApiError::BotBlocked)) => Ok(true),
+        Ok(_) => Ok(SendResult::Sent),
+        Err(RequestError::Api(ApiError::BotBlocked)) => Ok(SendResult::BotBlocked),
+        Err(RequestError::Api(ApiError::UserDeactivated)) => Ok(SendResult::UserDeactivated),
         Err(error) => Err(error),
     }
 }
@@ -527,7 +536,7 @@ async fn review(
         .select_languages_negotiate(&[review.locale.clone()], NegotiationStrategy::Filtering);
 
     let mut keyboard_markup = None;
-    let is_bot_blocked;
+    let send_result;
 
     match review.action {
         ReviewAction::Approve | ReviewAction::UnbanAndApprove => {
@@ -542,7 +551,7 @@ async fn review(
                 .member_limit(1)
                 .await?;
 
-            is_bot_blocked = is_bot_blocked_result(
+            send_result = check_send_result(
                 bot.send_message(
                     review.chat_id,
                     fl!(loader, "request-approved", link = invite_link.invite_link),
@@ -553,7 +562,7 @@ async fn review(
             let _ = storage.remove_dialogue(review.chat_id).await;
         }
         ReviewAction::Deny => {
-            is_bot_blocked = is_bot_blocked_result(
+            send_result = check_send_result(
                 bot.send_message(review.chat_id, fl!(loader, "request-denied"))
                     .await,
             )?;
@@ -565,7 +574,7 @@ async fn review(
                 .update_dialogue(review.chat_id, State::Blocked)
                 .await;
 
-            is_bot_blocked = is_bot_blocked_result(
+            send_result = check_send_result(
                 bot.send_message(review.chat_id, fl!(loader, "blocked"))
                     .await,
             )?;
@@ -585,7 +594,7 @@ async fn review(
         ReviewAction::Unblock => {
             let _ = storage.remove_dialogue(review.chat_id).await;
 
-            is_bot_blocked = is_bot_blocked_result(
+            send_result = check_send_result(
                 bot.send_message(review.chat_id, fl!(loader, "unblocked"))
                     .await,
             )?;
@@ -600,7 +609,7 @@ async fn review(
                 )
             );
 
-            is_bot_blocked = is_bot_blocked_result(
+            send_result = check_send_result(
                 bot.send_message(
                     review.chat_id,
                     fl!(
@@ -644,7 +653,7 @@ async fn review(
         review.action,
         &query.from,
         keyboard_markup,
-        is_bot_blocked,
+        send_result,
     )
     .await?;
 
