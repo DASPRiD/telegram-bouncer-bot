@@ -2,6 +2,7 @@ use std::env;
 use std::error::Error;
 use std::ops::Add;
 use std::path::PathBuf;
+use std::slice;
 use std::sync::Arc;
 
 use crate::countersign::Countersign;
@@ -532,8 +533,10 @@ async fn review(
     info!(review:debug; "Received review");
     bot.answer_callback_query(query.id).await?;
 
-    let loader = LANGUAGE_LOADER
-        .select_languages_negotiate(&[review.locale.clone()], NegotiationStrategy::Filtering);
+    let loader = LANGUAGE_LOADER.select_languages_negotiate(
+        slice::from_ref(&review.locale),
+        NegotiationStrategy::Filtering,
+    );
 
     let mut keyboard_markup = None;
     let send_result;
