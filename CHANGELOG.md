@@ -1,3 +1,10 @@
+## [1.11.2](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.11.1...v1.11.2) (2026-04-16)
+
+
+### Bug Fixes
+
+* handle UserDeactivated API error alongside BotBlocked ([7d5d7f5](https://github.com/DASPRiD/telegram-bouncer-bot/commit/7d5d7f52fd6da93a5ac1c7c2a1e763ed9ce4e2c1))
+
 ## [1.11.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.11.0...v1.11.1) (2025-07-29)
 
 
