@@ -1,3 +1,10 @@
+# [1.12.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.11.2...v1.12.0) (2026-05-27)
+
+
+### Features
+
+* unpin oldest channel posts after a configurable limit ([68fb50d](https://github.com/DASPRiD/telegram-bouncer-bot/commit/68fb50d2ddd4bf445b22029cebd05ea7632f9206))
+
 ## [1.11.2](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.11.1...v1.11.2) (2026-04-16)
 
 
