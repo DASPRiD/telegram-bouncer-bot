@@ -6,6 +6,7 @@ use std::slice;
 use std::sync::Arc;
 
 use crate::countersign::Countersign;
+use crate::pin_history::PinHistory;
 use crate::review::{Review, ReviewAction};
 use chrono::{TimeDelta, Utc};
 use envconfig::Envconfig;
@@ -32,6 +33,7 @@ use teloxide::{
 };
 
 mod countersign;
+mod pin_history;
 mod review;
 
 type JoinDialogue = Dialogue<State, ErasedStorage<State>>;
@@ -51,6 +53,9 @@ pub struct Config {
 
     #[envconfig(from = "STORAGE_PATH")]
     pub storage_path: Option<PathBuf>,
+
+    #[envconfig(from = "MAX_PINNED_CHANNEL_POSTS")]
+    pub max_pinned_channel_posts: Option<usize>,
 }
 
 #[derive(BotCommands, Clone)]
@@ -127,13 +132,25 @@ async fn main() {
 
     let countersign = Countersign::new();
 
+    let pin_history = match config.max_pinned_channel_posts {
+        Some(max) => {
+            let storage_path = config
+                .storage_path
+                .as_deref()
+                .expect("MAX_PINNED_CHANNEL_POSTS requires STORAGE_PATH to be set");
+            PinHistory::load(storage_path, max).expect("failed to load pin history")
+        }
+        None => PinHistory::disabled(),
+    };
+
     info!("bot started");
 
     Dispatcher::builder(bot, schema())
         .dependencies(dptree::deps![
             storage,
             Arc::new(config),
-            Arc::new(countersign)
+            Arc::new(countersign),
+            Arc::new(pin_history)
         ])
         .default_handler(|_| async move {
             // We ignore any update we don't know
@@ -168,7 +185,12 @@ fn schema() -> UpdateHandler<Box<dyn Error + Send + Sync + 'static>> {
         .branch(channel_post_handler)
 }
 
-async fn forward_channel_post(bot: Bot, msg: Message, config: Arc<Config>) -> HandlerResult {
+async fn forward_channel_post(
+    bot: Bot,
+    msg: Message,
+    config: Arc<Config>,
+    pin_history: Arc<PinHistory>,
+) -> HandlerResult {
     let channel_id = match config.channel_id {
         Some(channel_id) => ChatId(channel_id),
         None => return Ok(()),
@@ -183,6 +205,16 @@ async fn forward_channel_post(bot: Bot, msg: Message, config: Arc<Config>) -> Ha
         .forward_message(primary_chat_id, channel_id, msg.id)
         .await?;
     bot.pin_chat_message(primary_chat_id, result.id).await?;
+
+    for evicted in pin_history.push(result.id).await {
+        if let Err(err) = bot
+            .unpin_chat_message(primary_chat_id)
+            .message_id(evicted)
+            .await
+        {
+            warn!("failed to unpin message {}: {err}", evicted.0);
+        }
+    }
 
     Ok(())
 }

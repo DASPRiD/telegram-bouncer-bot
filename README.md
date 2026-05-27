@@ -57,6 +57,11 @@ To do so, allow the bot to pin messages in your primary chat and add it to the c
 environment variable: `CHANNEL_ID`. The bot will now forward any posts to your main chat and pin them. Edits are not
 automatically forwarded, as the first reaction to a post after a few minutes triggers an false-positive edit event.
 
+To avoid accumulating an unbounded list of pinned messages over time, set `MAX_PINNED_CHANNEL_POSTS` to the number of
+forwarded posts you want kept pinned at once. When a new post is pinned and the count exceeds this limit, the oldest
+pins the bot is tracking are removed. The list of tracked pins is persisted to disk, so `STORAGE_PATH` must be set
+when this option is used.
+
 ## Bot permissions
 
 After adding the bot to both your primary and your moderator chat, you need to give the bot the following administrator
