@@ -1,3 +1,16 @@
+# [1.13.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.12.0...v1.13.0) (2026-08-27)
+
+
+### Bug Fixes
+
+* **review:** decode the unban and approve action ([e33d2b8](https://github.com/DASPRiD/telegram-bouncer-bot/commit/e33d2b8cba099d8f2ce9b8efa5ae8ab3557210ac))
+
+
+### Features
+
+* **i18n:** allow restricting the supported languages ([e402cb0](https://github.com/DASPRiD/telegram-bouncer-bot/commit/e402cb05e00184923affad4be297adca38a92d08))
+* **review:** keep reviewing after a contact request ([58574a1](https://github.com/DASPRiD/telegram-bouncer-bot/commit/58574a1714dd129f0978f2b2ebb07274e38f39c4))
+
 # [1.12.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.11.2...v1.12.0) (2026-05-27)
 
 
