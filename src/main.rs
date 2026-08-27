@@ -404,7 +404,7 @@ fn get_markdown_display_name(user: &User) -> String {
     let mut display_name = format!("[{}](tg://user?id={})", escape(&full_name), user.id);
 
     if let Some(username) = user.username.clone() {
-        display_name.push_str(&escape(&format!(" (@{})", &username)));
+        display_name.push_str(&escape(&format!(" (@{})", username)));
     }
 
     display_name
@@ -419,7 +419,7 @@ fn get_plaintext_display_name(user: &User) -> String {
     }
 
     if let Some(username) = user.username.clone() {
-        display_name.push_str(&format!(" (@{})", &username));
+        display_name.push_str(&format!(" (@{})", username));
     }
 
     display_name
