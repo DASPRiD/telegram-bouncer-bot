@@ -37,6 +37,7 @@ impl TryFrom<u8> for ReviewAction {
             2 => Ok(ReviewAction::Block),
             3 => Ok(ReviewAction::Unblock),
             4 => Ok(ReviewAction::RequestContact),
+            5 => Ok(ReviewAction::UnbanAndApprove),
             _ => Err(InvalidReviewActionError {}),
         }
     }
