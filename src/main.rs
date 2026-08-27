@@ -425,6 +425,24 @@ fn get_plaintext_display_name(user: &User) -> String {
     display_name
 }
 
+/// Reports whether the user is banned from the primary chat.
+///
+/// A user unknown to the chat counts as not banned.
+async fn is_banned_from_primary_chat(
+    bot: &Bot,
+    config: &Config,
+    user_id: UserId,
+) -> Result<bool, RequestError> {
+    match bot
+        .get_chat_member(ChatId(config.primary_chat_id), user_id)
+        .await
+    {
+        Ok(chat_member) => Ok(chat_member.is_banned()),
+        Err(RequestError::Api(ApiError::UserNotFound)) => Ok(false),
+        Err(error) => Err(error),
+    }
+}
+
 async fn receive_reason(
     bot: Bot,
     dialogue: JoinDialogue,
@@ -450,15 +468,7 @@ async fn receive_reason(
         None => return Ok(()),
     };
 
-    let is_banned = match bot
-        .get_chat_member(ChatId(config.primary_chat_id), user.id)
-        .await
-    {
-        Ok(chat_member) => chat_member.is_banned(),
-        Err(RequestError::Api(ApiError::UserNotFound)) => false,
-        Err(error) => return Err(error.into()),
-    };
-
+    let is_banned = is_banned_from_primary_chat(&bot, &config, user.id).await?;
     let is_known_scammer = countersign.is_known_scammer(user.id).await;
 
     let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![
@@ -701,15 +711,6 @@ async fn review(
             )?;
         }
         ReviewAction::RequestContact => {
-            println!(
-                "{}",
-                fl!(
-                    loader,
-                    "contact-requested",
-                    moderator = get_markdown_display_name(&query.from)
-                )
-            );
-
             send_result = check_send_result(
                 bot.send_message(
                     review.chat_id,
@@ -723,10 +724,42 @@ async fn review(
                 .await,
             )?;
 
-            let _ = storage.remove_dialogue(review.chat_id).await;
+            let is_banned = is_banned_from_primary_chat(&bot, &config, review.user_id).await?;
 
-            let keyboard: Vec<Vec<InlineKeyboardButton>> =
-                vec![vec![InlineKeyboardButton::callback(
+            let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![
+                vec![
+                    if is_banned {
+                        InlineKeyboardButton::callback(
+                            "Unban & Approve",
+                            Review::new(
+                                ReviewAction::UnbanAndApprove,
+                                review.chat_id,
+                                review.user_id,
+                                review.locale.clone(),
+                            ),
+                        )
+                    } else {
+                        InlineKeyboardButton::callback(
+                            "Approve",
+                            Review::new(
+                                ReviewAction::Approve,
+                                review.chat_id,
+                                review.user_id,
+                                review.locale.clone(),
+                            ),
+                        )
+                    },
+                    InlineKeyboardButton::callback(
+                        "Deny",
+                        Review::new(
+                            ReviewAction::Deny,
+                            review.chat_id,
+                            review.user_id,
+                            review.locale.clone(),
+                        ),
+                    ),
+                ],
+                vec![InlineKeyboardButton::callback(
                     "Block",
                     Review::new(
                         ReviewAction::Block,
@@ -734,7 +767,8 @@ async fn review(
                         review.user_id,
                         review.locale,
                     ),
-                )]];
+                )],
+            ];
             keyboard_markup = Some(InlineKeyboardMarkup::new(keyboard));
         }
     }
