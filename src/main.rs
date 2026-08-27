@@ -3,7 +3,8 @@ use std::error::Error;
 use std::ops::Add;
 use std::path::PathBuf;
 use std::slice;
-use std::sync::Arc;
+use std::str::FromStr;
+use std::sync::{Arc, OnceLock};
 
 use crate::countersign::Countersign;
 use crate::pin_history::PinHistory;
@@ -12,10 +13,9 @@ use chrono::{TimeDelta, Utc};
 use envconfig::Envconfig;
 use i18n_embed::LanguageLoader;
 use i18n_embed::fluent::{FluentLanguageLoader, NegotiationStrategy, fluent_language_loader};
-use i18n_embed::unic_langid::LanguageIdentifier;
+use i18n_embed::unic_langid::{LanguageIdentifier, LanguageIdentifierError};
 use i18n_embed_fl::fl;
 use log::{error, info, warn};
-use once_cell::sync::Lazy;
 use rust_embed::RustEmbed;
 use serde::{Deserialize, Serialize};
 use structured_logger::Builder;
@@ -56,6 +56,30 @@ pub struct Config {
 
     #[envconfig(from = "MAX_PINNED_CHANNEL_POSTS")]
     pub max_pinned_channel_posts: Option<usize>,
+
+    #[envconfig(from = "SUPPORTED_LANGUAGES")]
+    pub supported_languages: Option<SupportedLanguages>,
+}
+
+/// Languages the bot replies in, as configured by the operator.
+///
+/// Parsed from a comma separated list of language identifiers. The fallback language is always
+/// supported and does not have to be listed.
+#[derive(Clone, Debug)]
+pub struct SupportedLanguages(Vec<LanguageIdentifier>);
+
+impl FromStr for SupportedLanguages {
+    type Err = LanguageIdentifierError;
+
+    fn from_str(value: &str) -> Result<Self, Self::Err> {
+        value
+            .split(',')
+            .map(str::trim)
+            .filter(|language| !language.is_empty())
+            .map(str::parse)
+            .collect::<Result<Vec<_>, _>>()
+            .map(Self)
+    }
 }
 
 #[derive(BotCommands, Clone)]
@@ -89,15 +113,61 @@ pub enum State {
 #[folder = "i18n/"]
 struct Localizations;
 
-static LANGUAGE_LOADER: Lazy<FluentLanguageLoader> = Lazy::new(|| {
+static LANGUAGE_LOADER: OnceLock<FluentLanguageLoader> = OnceLock::new();
+
+/// Returns the language loader initialized during startup.
+///
+/// Panics when called before [`init_language_loader`].
+fn language_loader() -> &'static FluentLanguageLoader {
+    LANGUAGE_LOADER
+        .get()
+        .expect("Language loader has not been initialized")
+}
+
+/// Loads the configured languages and makes them available via [`language_loader`].
+///
+/// Without a configuration all embedded languages are loaded. Otherwise only the configured ones
+/// are, together with the fallback language, which unmatched locales negotiate down to.
+fn init_language_loader(supported_languages: Option<&SupportedLanguages>) {
     let loader: FluentLanguageLoader = fluent_language_loader!();
 
-    loader
-        .load_available_languages(&Localizations)
-        .expect("Error while loading languages");
+    let available_languages = loader
+        .available_languages(&Localizations)
+        .expect("Error while listing available languages");
+
+    let languages = match supported_languages {
+        Some(supported_languages) => {
+            let mut languages = vec![loader.fallback_language().clone()];
+
+            for language in &supported_languages.0 {
+                assert!(
+                    available_languages.contains(language),
+                    "Unsupported language '{language}' in SUPPORTED_LANGUAGES, available languages: {}",
+                    available_languages
+                        .iter()
+                        .map(LanguageIdentifier::to_string)
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                );
+
+                if !languages.contains(language) {
+                    languages.push(language.clone());
+                }
+            }
+
+            languages
+        }
+        None => available_languages,
+    };
 
     loader
-});
+        .load_languages(&Localizations, &languages)
+        .expect("Error while loading languages");
+
+    LANGUAGE_LOADER
+        .set(loader)
+        .unwrap_or_else(|_| panic!("Language loader has already been initialized"));
+}
 
 #[tokio::main]
 async fn main() {
@@ -111,12 +181,8 @@ async fn main() {
 
     let bot = Bot::from_env();
 
-    let loader: FluentLanguageLoader = fluent_language_loader!();
-    loader
-        .load_languages(&Localizations, &[loader.fallback_language().clone()])
-        .unwrap();
-
     let config = Config::init_from_env().unwrap();
+    init_language_loader(config.supported_languages.as_ref());
 
     let storage: JoinStorage = if let Some(storage_path) = config.storage_path.clone() {
         SqliteStorage::open(
@@ -229,7 +295,7 @@ fn locale_from_message(msg: &Message) -> LanguageIdentifier {
 }
 
 fn loader_from_message(msg: &Message) -> FluentLanguageLoader {
-    LANGUAGE_LOADER
+    language_loader()
         .select_languages_negotiate(&[locale_from_message(msg)], NegotiationStrategy::Filtering)
 }
 
@@ -368,7 +434,7 @@ async fn receive_reason(
 ) -> HandlerResult {
     let locale = locale_from_message(&msg);
     let loader =
-        LANGUAGE_LOADER.select_languages_negotiate(&[&locale], NegotiationStrategy::Filtering);
+        language_loader().select_languages_negotiate(&[&locale], NegotiationStrategy::Filtering);
 
     let reason = match msg.text() {
         Some(text) => text.to_owned(),
@@ -565,7 +631,7 @@ async fn review(
     info!(review:debug; "Received review");
     bot.answer_callback_query(query.id).await?;
 
-    let loader = LANGUAGE_LOADER.select_languages_negotiate(
+    let loader = language_loader().select_languages_negotiate(
         slice::from_ref(&review.locale),
         NegotiationStrategy::Filtering,
     );

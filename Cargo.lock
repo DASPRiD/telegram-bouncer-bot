@@ -2512,7 +2512,6 @@ dependencies = [
  "i18n-embed",
  "i18n-embed-fl",
  "log",
- "once_cell",
  "reqwest",
  "rust-embed",
  "serde",

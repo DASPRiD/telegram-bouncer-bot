@@ -84,3 +84,13 @@ detect the user's language and reply in that if available, otherwise it will fal
 
 If you want to have another language supported you can open a pull request with your language added to the `i18n`
 folder.
+
+By default the bot offers every language shipped in the `i18n` folder. To limit it to a subset, set the
+`SUPPORTED_LANGUAGES` environment variable to a comma separated list of language identifiers:
+
+```yaml
+- SUPPORTED_LANGUAGES=de,fr
+```
+
+Users whose language is not in the list get English, which is always available and does not have to be listed.
+Listing a language the bot does not ship makes it exit on startup with the list of available languages.
