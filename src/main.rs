@@ -326,6 +326,12 @@ async fn start(
 
     let loader = loader_from_message(&msg);
 
+    if let Some(State::AwaitApproval { .. }) = dialogue.get().await? {
+        bot.send_message(msg.chat.id, fl!(loader, "under-review"))
+            .await?;
+        return Ok(());
+    }
+
     let is_present = match bot
         .get_chat_member(ChatId(config.primary_chat_id), from.id)
         .await
