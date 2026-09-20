@@ -1,3 +1,10 @@
+## [1.13.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.13.0...v1.13.1) (2026-09-20)
+
+
+### Bug Fixes
+
+* reject /start while a join request awaits approval ([907fc0e](https://github.com/DASPRiD/telegram-bouncer-bot/commit/907fc0efb2d95286a90d033f5b4e7f9ff6e188b0))
+
 # [1.13.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.12.0...v1.13.0) (2026-08-27)
 
 
