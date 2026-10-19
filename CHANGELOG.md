@@ -1,3 +1,10 @@
+# [1.14.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.13.1...v1.14.0) (2026-10-19)
+
+
+### Features
+
+* explain unlinkable applicant names to moderators ([bbdb186](https://github.com/DASPRiD/telegram-bouncer-bot/commit/bbdb1862f7f4f105ad9cfd165d186e64cc087136))
+
 ## [1.13.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.13.0...v1.13.1) (2026-09-20)
 
 
