@@ -449,6 +449,21 @@ async fn is_banned_from_primary_chat(
     }
 }
 
+/// Reports whether the user's privacy settings strip `tg://user?id=` mentions
+/// of them outside of chats they are a member of.
+///
+/// A failed lookup counts as unrestricted, as the result only drives a hint in
+/// the moderator message.
+async fn has_private_forwards(bot: &Bot, user_id: UserId) -> bool {
+    match bot.get_chat(ChatId::from(user_id)).await {
+        Ok(chat) => chat.has_private_forwards(),
+        Err(error) => {
+            warn!(error:err; "Failed to look up forward privacy");
+            false
+        }
+    }
+}
+
 async fn receive_reason(
     bot: Bot,
     dialogue: JoinDialogue,
@@ -476,6 +491,7 @@ async fn receive_reason(
 
     let is_banned = is_banned_from_primary_chat(&bot, &config, user.id).await?;
     let is_known_scammer = countersign.is_known_scammer(user.id).await;
+    let mention_unlinkable = has_private_forwards(&bot, user.id).await;
 
     let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![
         vec![
@@ -517,19 +533,20 @@ async fn receive_reason(
         .send_message(
             ChatId(config.moderator_chat_id),
             format!(
-                "{}{} would like to join for the following reason:\n\n{}{}",
+                "{}{}{} would like to join for the following reason:\n\n{}{}",
                 get_markdown_display_name(user),
-                if is_banned {
-                    " *\\[__BANNED__]\\)*"
-                } else {
-                    ""
-                },
+                if is_banned { " *\\[__BANNED__\\]*" } else { "" },
                 if is_known_scammer {
-                    " *\\[__KNOWN SCAMMER__]\\)*"
+                    " *\\[__KNOWN SCAMMER__\\]*"
                 } else {
                     ""
                 },
                 escape(reason.trim()),
+                if mention_unlinkable {
+                    "\n\n_Name shown without a link: this user's privacy settings don't allow it\\._"
+                } else {
+                    ""
+                },
             ),
         )
         .parse_mode(ParseMode::MarkdownV2)
