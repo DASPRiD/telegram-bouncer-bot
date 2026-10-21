@@ -491,7 +491,7 @@ async fn receive_reason(
 
     let is_banned = is_banned_from_primary_chat(&bot, &config, user.id).await?;
     let is_known_scammer = countersign.is_known_scammer(user.id).await;
-    let mention_unlinkable = has_private_forwards(&bot, user.id).await;
+    let mention_unlinkable = user.username.is_none() && has_private_forwards(&bot, user.id).await;
 
     let keyboard: Vec<Vec<InlineKeyboardButton>> = vec![
         vec![
