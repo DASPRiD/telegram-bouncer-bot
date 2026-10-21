@@ -1,3 +1,10 @@
+## [1.14.1](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.14.0...v1.14.1) (2026-10-21)
+
+
+### Bug Fixes
+
+* suppress the unlinkable-name note when a username is shown ([8232423](https://github.com/DASPRiD/telegram-bouncer-bot/commit/8232423d50ddf724f9ca32384679a1c7c0ab99f6))
+
 # [1.14.0](https://github.com/DASPRiD/telegram-bouncer-bot/compare/v1.13.1...v1.14.0) (2026-10-19)
 
 
